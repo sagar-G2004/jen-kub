@@ -1,6 +1,9 @@
 pipeline {
-
     agent any
+
+    environment {
+        IMAGE_NAME = "sagarg23/demo-image"
+    }
 
     stages {
 
@@ -10,23 +13,33 @@ pipeline {
             }
         }
 
-        stage('Cluster Info') {
+        stage('Build Image') {
             steps {
-                sh 'kubectl cluster-info'
+                sh 'docker build -t $IMAGE_NAME:latest .'
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                sh 'docker push $IMAGE_NAME:latest'
             }
         }
 
         stage('Deploy') {
             steps {
-                sh 'kubectl apply -f deployment.yaml'
+                sh '''
+                    kubectl apply -f deployment.yaml
+                '''
             }
         }
 
         stage('Verify') {
             steps {
-                sh 'kubectl get deployments'
-                sh 'kubectl get pods'
-                sh 'kubectl get svc'
+                sh '''
+                    kubectl get deployments
+                    kubectl get pods
+                    kubectl get svc
+                '''
             }
         }
     }
